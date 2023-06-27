@@ -1,0 +1,25 @@
+                asynchronus JavaScript an XML
+ajax - to send request without page refresh 
+        ajax hai front end ya back end se ek request ya response bhejan other end par, bina page refresh kiye
+        package : 
+            axios
+        ways :
+         1. xmlhttprequest - inbuilt
+         2. fetch - inbuilt in javaScript
+         3. third party packages -> axios
+
+            JavaScript Object Notation
+json - yahi wo data hota hai jo jaata ya aata hai
+    {
+        "name" : "rahul"
+    }
+
+
+fe pe koi harkat hoti hai hise be pe ek req jatti hai jise koi rout hit hota hai jise kuchh action perform hota hai ya to db main ya fir server par aurr fir last mein ek naya page render hojaata hai
+
+
+1. hit be with axios
+2. hit backend with axios and send a run from fe
+3. ek input field par jo likha hai wo bhejo be.
+4. ek input field par ho bhi likhein wo bina button dabaaye backend par jaaye
+
