@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var userModel = require('./users');
+var postModel = require('./posts');
 var passport = require('passport');
 var localStrategy = require('passport-local');
 var multer = require('multer');
@@ -40,14 +41,14 @@ router.get('/profile',isLoggedIn,function(req,res)
     res.render('profile',{user});
   })
 })
-router.get('/feed',isLoggedIn,function(req,res)
-{
-  userModel.find()
-  .then(function(allusers)
-  {
-    res.render('feed',{allusers});
-  })
-})
+// router.get('/feed',isLoggedIn,function(req,res)
+// {
+//   userModel.find()
+//   .then(function(allusers)
+//   {
+//     res.render('feed',{allusers});
+//   })
+// })
 router.post('/register',function(req,res)
 {
   var newUser = new userModel(
@@ -152,6 +153,67 @@ router.get('/profile/:id',isLoggedIn,function(req,res)
     res.render('profile',{user});
   })
 })
+
+router.get('/show',function(req,res)
+{
+  userModel.find()
+  .then((allusers)=>
+  {
+    res.send(allusers);
+  })
+})
+
+router.post('/posts',isLoggedIn,(req,res)=>{
+  userModel.findOne({username : req.session.passport.user})
+  .then((user)=>{
+    postModel.create(
+      {
+        postData : req.body.postData,
+        userId : user._id
+      }
+    )
+    .then((createdPost)=>
+    {
+      user.posts.push(createdPost._id);
+      user.save()
+      .then((post)=>
+      {
+        res.send(createdPost);
+      })
+    })
+  })
+})
+
+router.get("/users",(req,res)=>{
+  userModel.find()
+  .then((allusers)=>{
+    res.send(allusers);
+  })
+})
+
+router.get("/feed",(req,res)=>{
+  userModel.find()
+  .populate({
+    path : "posts",
+    populate : {
+      path : "userId"
+    }
+  })
+  .then((allusers)=>{
+    // console.log(allusers);
+    // res.send(allusers);
+    res.render("feed",{allusers})
+  })
+})
+// router.get("/feed",(req,res)=>{
+//   userModel.findOne({username : "boby"})
+//   .populate("posts")
+//   .then((user)=>{
+//     res.send(user);
+//     console.log(user.posts);
+//     console.log(user.posts[0].postData)
+//   })
+// })
 
 module.exports = router;
 

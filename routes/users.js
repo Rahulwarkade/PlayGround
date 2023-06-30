@@ -9,7 +9,11 @@ var userSchema = mongoose.Schema({
     image : {
         type : String,
         default : "avatar.webp"
-    }
+    },
+    posts : [{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "post"
+    }]
 });
 
 userSchema.plugin(plm);
