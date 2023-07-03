@@ -33,14 +33,14 @@ function fileFilter(req,file,cb)
 router.get('/', function(req, res) {
   res.render('index');
 });
-router.get('/profile',isLoggedIn,function(req,res)
-{
-  userModel.findOne({username : req.session.passport.user})
-  .then(function(user)
-  {
-    res.render('profile',{user});
-  })
-})
+// router.get('/profile',isLoggedIn,function(req,res)
+// {
+//   userModel.findOne({username : req.session.passport.user})
+//   .then(function(user)
+//   {
+//     res.render('profile',{user});
+//   })
+// })
 // router.get('/feed',isLoggedIn,function(req,res)
 // {
 //   userModel.find()
@@ -145,23 +145,20 @@ router.get('/find/username/:username',(req,res)=>
   })
 })
 
-router.get('/profile/:id',isLoggedIn,function(req,res)
+router.get('/profile/:id',isLoggedIn,async function(req,res)
 {
-  userModel.findOne({_id : req.params.id})
-  .then(function(user)
-  {
-    res.render('profile',{user});
-  })
+  var user = await userModel.findOne({_id : req.params.id});
+  const dt = new Date();
+  var time = dt.getDate() + "/" + dt.getMonth() + "/"+ dt.getFullYear();
+  await user.populate({
+    path : "posts",
+    populate : {
+      path : "userId"
+    }
+  });
+  res.render("profile",{user,loggedInUser : loggedInUser.username,time});
 })
 
-router.get('/show',function(req,res)
-{
-  userModel.find()
-  .then((allusers)=>
-  {
-    res.send(allusers);
-  })
-})
 
 router.post('/posts',isLoggedIn,(req,res)=>{
   userModel.findOne({username : req.session.passport.user})
@@ -169,7 +166,7 @@ router.post('/posts',isLoggedIn,(req,res)=>{
     postModel.create(
       {
         postData : req.body.postData,
-        userId : user._id
+        userId : user._id,
       }
     )
     .then((createdPost)=>
@@ -178,42 +175,54 @@ router.post('/posts',isLoggedIn,(req,res)=>{
       user.save()
       .then((post)=>
       {
-        res.send(createdPost);
+        res.redirect("/profile");
       })
     })
   })
 })
-
-router.get("/users",(req,res)=>{
-  userModel.find()
-  .then((allusers)=>{
-    res.send(allusers);
-  })
+router.get('/profile',isLoggedIn,async (req,res)=>{
+  var loggedInUser = await userModel.findOne({username : req.session.passport.user});
+  const dt = new Date();
+  var time = dt.getDate() + "/" + dt.getMonth() + "/"+ dt.getFullYear();
+  await loggedInUser.populate({
+    path : "posts",
+    populate : {
+      path : "userId"
+    }
+  });
+  res.render("profile",{user : loggedInUser,loggedInUser : loggedInUser.username,time});
 })
 
-router.get("/feed",(req,res)=>{
-  userModel.find()
+router.get("/feed",isLoggedIn,(req,res)=>{
+  userModel.findOne({username : req.session.passport.user})
   .populate({
     path : "posts",
     populate : {
       path : "userId"
     }
   })
-  .then((allusers)=>{
-    // console.log(allusers);
-    // res.send(allusers);
-    res.render("feed",{allusers})
+  .then((u)=>{
+    res.render("feed",{user : u});
   })
 })
-// router.get("/feed",(req,res)=>{
-//   userModel.findOne({username : "boby"})
-//   .populate("posts")
-//   .then((user)=>{
-//     res.send(user);
-//     console.log(user.posts);
-//     console.log(user.posts[0].postData)
-//   })
-// })
+
+router.get("/like/:id",isLoggedIn,async (req,res)=>{
+  var loggedInUser = await userModel.findOne({username: req.session.passport.user});
+  var user = await userModel.findOne({_id: req.params.id});
+
+  var idx = user.likes.indexOf(loggedInUser._id);
+  if(idx===-1)
+  {
+    user.likes.push(loggedInUser._id);
+    await user.save();
+  }
+  else
+  {
+    user.likes.slice(idx,1);
+    await user.save();
+  }
+  res.redirect("back");
+})
 
 module.exports = router;
 

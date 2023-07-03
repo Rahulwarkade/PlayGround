@@ -13,7 +13,11 @@ var userSchema = mongoose.Schema({
     posts : [{
         type : mongoose.Schema.Types.ObjectId,
         ref : "post"
-    }]
+    }],
+    likes :{
+        type : Array,
+        default : []
+    },
 });
 
 userSchema.plugin(plm);
