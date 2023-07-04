@@ -30,7 +30,7 @@ function fileFilter(req,file,cb)
     cb(new Error('I don\'t hava a clue!'), false);
   }
 }
-router.get('/', function(req, res) {
+router.get('/', isLoggedOut,function(req, res) {
   res.render('index');
 });
 
@@ -124,6 +124,7 @@ router.get('/find/username/:username',(req,res)=>
 {
   var regex = new RegExp("^"+req.params.username);
   userModel.find({username : regex})
+  .limit(4)
   .then((allusers)=>
   {
     res.json(allusers);
@@ -187,6 +188,11 @@ router.get('/profile',isLoggedIn,async (req,res)=>{
 })
 
 router.get("/feed",isLoggedIn,(req,res)=>{
+  const dt = new Date();
+  var min = dt.getMinutes();
+  var hours = dt.getHours();
+  var ampm = (hours>=12) ? "PM" : "AM";
+  var time = dt.getDate() + "/" + dt.getMonth() + "/"+ dt.getFullYear() + " " + hours + ":" + min + ampm;
   userModel.findOne({username : req.session.passport.user})
   .populate({
     path : "posts",
@@ -195,7 +201,7 @@ router.get("/feed",isLoggedIn,(req,res)=>{
     }
   })
   .then((u)=>{
-    res.render("feed",{user : u});
+    res.render("feed",{user : u,time});
   })
 })
 router.get("/like/:id",isLoggedIn,async (req,res)=>{
@@ -215,4 +221,15 @@ router.get("/like/:id",isLoggedIn,async (req,res)=>{
   res.redirect("back");
 })
 
+function isLoggedOut(req,res,next)
+{
+  if(req.isAuthenticated())
+  {
+    return res.redirect("/profile");
+  }
+  else
+  {
+    return next();
+  }
+}
 module.exports = router;
